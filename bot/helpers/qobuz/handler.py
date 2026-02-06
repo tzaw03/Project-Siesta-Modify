@@ -155,6 +155,13 @@ async def start_artist(albums, user, artist):
 
 
 async def start_playlist(tracks, playlist, user):
+    """
+    ✨ MODIFIED: Qobuz playlist downloader with Channel upload support (like Tidal)
+    - Creates a playlist folder
+    - Downloads each track
+    - Uploads each track to both User & Channel individually (Telegram mode)
+    - For other modes (Rclone/Local), behaves like before
+    """
     play_meta = await get_playlist_meta(playlist[0], tracks, user['r_id'])
     
     playlist_folder = None
@@ -178,8 +185,27 @@ async def start_playlist(tracks, playlist, user):
         'type': play_meta['type']
     }
 
+    # Poster (cover art)
     play_meta['poster_msg'] = await post_art_poster(user, play_meta)
 
+    # ============================================================
+    # 🔥 KEY CHANGE: For Telegram mode, upload each track individually
+    # ============================================================
+    if bot_set.upload_mode == 'Telegram':
+        # Download tracks concurrently (each track uploads itself to User & Channel)
+        tasks = []
+        for track in play_meta['tracks']:
+            # upload=True: track_upload() ကို ခေါ်မယ် → telegram_upload() runs
+            tasks.append(start_track(track['itemid'], user, track, True, playlist_folder))
+        
+        await run_concurrent_tasks(tasks, update_details)
+        
+        # No need to zip or batch upload - already uploaded track-by-track
+        return True
+    
+    # ============================================================
+    # For Rclone/Local modes: keep original behavior
+    # ============================================================
     upload = True
     if bot_set.playlist_conc:
         upload = False
@@ -204,3 +230,20 @@ async def start_playlist(tracks, playlist, user):
     if not upload:
         await edit_message(user['bot_msg'], lang.s.UPLOADING)
         await playlist_upload(play_meta, user)
+```
+
+---
+
+## 🎯 GitHub မှာ လုပ်ရမယ့် Steps:
+
+### **Option 1: Web Interface (အလွယ်ဆုံး)**
+```
+1. GitHub repo ကို browser မှာ ဖွင့်ပါ
+2. Navigate to: bot/helpers/qobuz/handler.py
+3. Click pencil icon (Edit this file) 
+4. Select ALL content (Ctrl+A) → Delete
+5. Paste the code block above (အပေါ်က code အပြည့်အစုံ)
+6. Scroll down → Commit changes
+   - Commit message: "Add Qobuz channel upload support"
+   - Description: "Modified start_playlist() to upload tracks individually to channel (Telegram mode)"
+7. Click "Commit changes"
