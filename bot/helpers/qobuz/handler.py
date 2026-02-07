@@ -230,20 +230,4 @@ async def start_playlist(tracks, playlist, user):
     if not upload:
         await edit_message(user['bot_msg'], lang.s.UPLOADING)
         await playlist_upload(play_meta, user)
-```
 
----
-
-## 🎯 GitHub မှာ လုပ်ရမယ့် Steps:
-
-### **Option 1: Web Interface (အလွယ်ဆုံး)**
-```
-1. GitHub repo ကို browser မှာ ဖွင့်ပါ
-2. Navigate to: bot/helpers/qobuz/handler.py
-3. Click pencil icon (Edit this file) 
-4. Select ALL content (Ctrl+A) → Delete
-5. Paste the code block above (အပေါ်က code အပြည့်အစုံ)
-6. Scroll down → Commit changes
-   - Commit message: "Add Qobuz channel upload support"
-   - Description: "Modified start_playlist() to upload tracks individually to channel (Telegram mode)"
-7. Click "Commit changes"
